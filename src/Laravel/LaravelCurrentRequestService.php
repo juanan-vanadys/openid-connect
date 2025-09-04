@@ -10,7 +10,7 @@ use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use Slim\Psr7\Factory\StreamFactory;
 use Slim\Psr7\Factory\UploadedFileFactory;
-use Slim\Psr7\Factory\UriFactory;
+use Slim\Psr7\Factory\ResponseFactory;
 
 class LaravelCurrentRequestService implements CurrentRequestServiceInterface
 {
@@ -21,7 +21,7 @@ class LaravelCurrentRequestService implements CurrentRequestServiceInterface
             new ServerRequestFactory(),
             new StreamFactory(),
             new UploadedFileFactory(),
-            new UriFactory()
+            new ResponseFactory()
         );
 
         // Convert Laravel request to PSR-7
