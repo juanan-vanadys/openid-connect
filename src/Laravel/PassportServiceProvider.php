@@ -8,8 +8,8 @@ use Illuminate\Encryption\Encrypter;
 use Laravel\Passport;
 use Laravel\Passport\Bridge\AccessTokenRepository;
 use Laravel\Passport\Bridge\ClientRepository;
+use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Configuration;
-use Lcobucci\JWT\Signer\Key\InMemory;
 use League\OAuth2\Server\AuthorizationServer;
 use Slim\Psr7\Response;
 use OpenIDConnect\ClaimExtractor;
@@ -52,13 +52,16 @@ class PassportServiceProvider extends Passport\PassportServiceProvider
         $cryptKey = $this->makeCryptKey('private');
         $encryptionKey = app(Encrypter::class)->getKey();
 
+        // JWT 3.4: use Key object with key contents
+        $jwtConfig = Configuration::forSymmetricSigner(
+            app(config('openid.signer')),
+            new Key(file_get_contents($cryptKey->getKeyPath()))
+        );
+
         $responseType = new IdTokenResponse(
             app(config('openid.repositories.identity')),
             app(ClaimExtractor::class),
-            Configuration::forSymmetricSigner(
-                app(config('openid.signer')),
-                InMemory::plainText(file_get_contents($cryptKey->getKeyPath())),
-            ),
+            $jwtConfig,
             app(LaravelCurrentRequestService::class),
             $encryptionKey,
         );
@@ -73,11 +76,6 @@ class PassportServiceProvider extends Passport\PassportServiceProvider
         );
     }
 
-    /**
-     * Build the Auth Code grant instance.
-     *
-     * @return AuthCodeGrant
-     */
     protected function buildAuthCodeGrant()
     {
         return new AuthCodeGrant(
@@ -89,7 +87,8 @@ class PassportServiceProvider extends Passport\PassportServiceProvider
         );
     }
 
-    public function registerClaimExtractor() {
+    public function registerClaimExtractor()
+    {
         $this->app->singleton(ClaimExtractor::class, function () {
             $customClaimSets = config('openid.custom_claim_sets');
 
