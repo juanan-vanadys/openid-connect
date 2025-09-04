@@ -19,9 +19,9 @@ class LaravelCurrentRequestService implements CurrentRequestServiceInterface
         // Create Slim PSR-17 factories
         $psrHttpFactory = new PsrHttpFactory(
             new ServerRequestFactory(),
-            new UriFactory(),
+            new StreamFactory(),
             new UploadedFileFactory(),
-            new StreamFactory()
+            new UriFactory()
         );
 
         // Convert Laravel request to PSR-7
