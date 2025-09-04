@@ -11,7 +11,7 @@ use Laravel\Passport\Bridge\ClientRepository;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use League\OAuth2\Server\AuthorizationServer;
-use Nyholm\Psr7\Response;
+use Slim\Psr7\Response;
 use OpenIDConnect\ClaimExtractor;
 use OpenIDConnect\Claims\ClaimSet;
 use OpenIDConnect\Grant\AuthCodeGrant;
