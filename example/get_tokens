@@ -22,23 +22,50 @@ class Crawler
         return strtr(rtrim($encoded, '='), '+/', '-_');
     }
 
-    public function httpRequest($url, array $params, $post = false)
+    public function httpRequest(string $url, array $params, bool $post = false): string
     {
-        $streamContext['http']['max_redirects'] = 1;
+        $streamContext = [
+            'http' => [
+                'max_redirects' => 1,
+                'ignore_errors' => true, // capture even 4xx/5xx responses
+            ],
+        ];
 
-        $params = http_build_query($params);
+        $query = http_build_query($params);
         if ($post) {
-            $streamContext['http']['method'] = 'POST';
-            $streamContext['http']['content'] = $params;
+            $streamContext['http']['method']  = 'POST';
+            $streamContext['http']['header']  = "Content-Type: application/x-www-form-urlencoded\r\n";
+            $streamContext['http']['content'] = $query;
         } else {
-            $url .= '?' . $params;
+            $url .= (strpos($url, '?') === false ? '?' : '&') . $query;
         }
 
-        $contents = file_get_contents($url, false, stream_context_create($streamContext));
+        $context  = stream_context_create($streamContext);
+        $contents = @file_get_contents($url, false, $context);
 
+        // --- error handling ---
+        if ($contents === false) {
+            $error = error_get_last();
+            throw new \RuntimeException("HTTP request failed: " . ($error['message'] ?? 'unknown error'));
+        }
+
+        if (!isset($http_response_header) || !is_array($http_response_header)) {
+            throw new \RuntimeException("No response headers received from $url");
+        }
+
+        // Check status code
+        $statusLine = $http_response_header[0] ?? null;
+        if ($statusLine && preg_match('#HTTP/\d+\.\d+\s+(\d+)#', $statusLine, $m)) {
+            $statusCode = (int) $m[1];
+            if ($statusCode >= 400) {
+                throw new \RuntimeException("HTTP error $statusCode received from $url");
+            }
+        }
+
+        // Handle redirect
         foreach ($http_response_header as $responseHeader) {
-            if (substr($responseHeader, 0, 10) == 'Location: ') {
-                return substr($responseHeader, 10);
+            if (stripos($responseHeader, 'Location: ') === 0) {
+                return trim(substr($responseHeader, 10));
             }
         }
 

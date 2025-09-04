@@ -53,6 +53,7 @@ class AuthCodeGrant extends \League\OAuth2\Server\Grant\AuthCodeGrant
 
         $queryParams = $this->currentRequestService->getRequest()->getQueryParams();
 
+
         if (isset($queryParams['nonce'])) {
             // The only way to get the redirect URI is to generate the PSR7 response
             // (The RedirectResponse class does not have a getter for the redirect URI)

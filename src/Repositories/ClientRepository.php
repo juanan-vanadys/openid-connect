@@ -9,7 +9,12 @@ use OpenIDConnect\Entities\ClientEntity;
 
 class ClientRepository implements ClientRepositoryInterface
 {
-    public function getClientEntity($clientIdentifier)
+    public function getClientEntity(
+        $clientIdentifier,
+        $grantType = null,
+        $clientSecret = null,
+        $mustValidateSecret = true
+    )
     {
         $client = new ClientEntity();
         $client->setIdentifier('1');

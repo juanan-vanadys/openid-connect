@@ -27,6 +27,6 @@ class KeyFactory
 
     public static function cryptKey(?string $path = null): CryptKey
     {
-        return new CryptKey($path ?? self::privateKeyPath());
+        return new CryptKey($path ?? self::privateKeyPath(), false);
     }
 }

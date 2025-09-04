@@ -14,7 +14,7 @@ class ConfigutationFactory
 {
     private function build(
         ?Key $signerKey = null,
-        ?Signer $signer = null,
+        ?Signer $signer = null
     ): Configuration {
         return Configuration::forSymmetricSigner(
             $signer ?? new HmacSha256(),
