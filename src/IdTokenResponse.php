@@ -25,23 +25,28 @@ class IdTokenResponse extends BearerTokenResponse
     protected ClaimExtractor $claimExtractor;
 
     private Configuration $config;
+
     private ?CurrentRequestServiceInterface $currentRequestService;
 
+    private ?string $kid = null;
+
     /**
-     * @param string|Key|null $encryptionKey
+     * @param  string|Key|null  $encryptionKey
      */
     public function __construct(
         IdentityRepositoryInterface $identityRepository,
         ClaimExtractor $claimExtractor,
         Configuration $config,
         CurrentRequestServiceInterface $currentRequestService = null,
-        $encryptionKey = null
+        $encryptionKey = null,
+        $kid = null
     ) {
         $this->identityRepository = $identityRepository;
         $this->claimExtractor = $claimExtractor;
         $this->config = $config;
         $this->currentRequestService = $currentRequestService;
         $this->encryptionKey = $encryptionKey;
+        $this->kid = $kid;
     }
 
     protected function getBuilder(
@@ -52,14 +57,16 @@ class IdTokenResponse extends BearerTokenResponse
 
         if ($this->currentRequestService) {
             $uri = $this->currentRequestService->getRequest()->getUri();
-            $issuer = $uri->getScheme() . '://' . $uri->getHost() . ($uri->getPort() ? ':' . $uri->getPort() : '');
+            $issuer = $uri->getScheme().'://'.$uri->getHost().($uri->getPort() ? ':'.$uri->getPort() : '');
         } else {
-            $issuer = 'https://' . $_SERVER['HTTP_HOST'];
+            $issuer = 'https://'.$_SERVER['HTTP_HOST'];
         }
 
-        return $this->config
-            ->builder()
-            ->permittedFor($accessToken->getClient()->getIdentifier())
+        $builder = $this->config->builder();
+        if ($this->kid) {
+            $builder->withHeader('kid', $this->kid);
+        }
+        return $builder->permittedFor($accessToken->getClient()->getIdentifier())
             ->issuedBy($issuer)
             ->issuedAt($dateTimeImmutableObject)
             ->expiresAt($dateTimeImmutableObject->add(new DateInterval('PT1H')))

@@ -64,6 +64,7 @@ class PassportServiceProvider extends Passport\PassportServiceProvider
             $jwtConfig,
             app(LaravelCurrentRequestService::class),
             $encryptionKey,
+            config('openid.token_headers.kid', false)
         );
 
         return new AuthorizationServer(
