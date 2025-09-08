@@ -52,10 +52,11 @@ class PassportServiceProvider extends Passport\PassportServiceProvider
         $cryptKey = $this->makeCryptKey('private');
         $encryptionKey = app(Encrypter::class)->getKey();
 
-        // JWT 3.4: use Key object with key contents
-        $jwtConfig = Configuration::forSymmetricSigner(
-            app(config('openid.signer')),
-            new Key(file_get_contents($cryptKey->getKeyPath()))
+        // Change from symmetric to asymmetric signer for RS256
+        $jwtConfig = Configuration::forAsymmetricSigner(
+            app(config('openid.signer')), // This should be Rsa\Sha256 signer
+            new Key(file_get_contents($cryptKey->getKeyPath())), // Private key for signing
+            new Key(file_get_contents($this->makeCryptKey('public')->getKeyPath())) // Public key for verification
         );
 
         $responseType = new IdTokenResponse(
